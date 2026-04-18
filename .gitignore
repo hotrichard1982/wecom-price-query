@@ -35,9 +35,10 @@ wheels/
 # Trae规则目录
 .trae/
 
-# 项目根目录Markdown文件
-*.md
-!.env.example
+# 项目文档（保留README.md）
+商品价格查询系统PRD.md
+开发必备参数.md
+代码审查报告.md
 
 # macOS
 .DS_Store
