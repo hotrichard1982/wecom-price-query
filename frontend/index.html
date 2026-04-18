@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品价格查询系统</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 加载动画 -->
+    <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        <p>加载中...</p>
+    </div>
+
+    <!-- 主应用 -->
+    <div id="app" class="app hidden">
+        <div class="app-header">
+            <h1>商品价格查询系统</h1>
+            <p class="app-subtitle">快速查询商品价格，提高报价效率</p>
+        </div>
+
+        <!-- 查询表单 -->
+        <form id="query-form" class="query-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="product-name">产品名</label>
+                    <input type="text" id="product-name" placeholder="请输入产品名">
+                </div>
+                <div class="form-group">
+                    <label for="power">发电机组功率(KVA/KW)</label>
+                    <select id="power">
+                        <option value="">请选择功率</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="engine-model">柴油发动机型号</label>
+                    <select id="engine-model">
+                        <option value="">请选择柴油发动机型号</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="generator-model">发电机型号</label>
+                    <select id="generator-model">
+                        <option value="">请选择发电机型号</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="clear-btn" class="clear-btn">清空</button>
+                <button type="submit" class="query-btn">查询</button>
+            </div>
+        </form>
+
+        <!-- 查询结果 -->
+        <div id="result" class="result hidden">
+            <div class="result-header">
+                <h2>查询结果</h2>
+            </div>
+            <div id="result-list" class="result-list"></div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
