@@ -74,13 +74,32 @@ def main():
         print(f"❌ 服务启动失败: {e}")
         return
     
+    # 从.env文件中读取token（如果存在）
+    import re
+    access_token = ''
+    try:
+        env_file = Path(__file__).parent / '.env'
+        if env_file.exists():
+            content = env_file.read_text(encoding='utf-8')
+            match = re.search(r'token\s*=\s*(\S+)', content)
+            if match:
+                access_token = match.group(1)
+    except:
+        pass
+    
     # 显示访问地址
     print()
     print("=" * 60)
     print("🎉 服务启动完成！")
     print("=" * 60)
     print()
-    print(f"📱 访问地址: http://127.0.0.1:{port}")
+    
+    if access_token:
+        print(f"📱 访问地址: http://127.0.0.1:{port}/?token={access_token}")
+    else:
+        print(f"📱 访问地址: http://127.0.0.1:{port}")
+        print("⚠️  未检测到访问Token，请在.env文件中配置token字段")
+    
     print()
     print("💡 提示: 按 Ctrl+C 停止服务")
     print()
@@ -88,7 +107,7 @@ def main():
     # 在后台打开浏览器
     browser_thread = threading.Thread(
         target=open_browser,
-        args=(f"http://127.0.0.1:{port}",),
+        args=(f"http://127.0.0.1:{port}/?token={access_token}" if access_token else f"http://127.0.0.1:{port}",),
         daemon=True
     )
     browser_thread.start()

@@ -19,6 +19,9 @@ class Config:
     ACCESS_TOKEN_URL = 'https://qyapi.weixin.qq.com/cgi-bin/gettoken'
     SMARTSHEET_API_URL = 'https://qyapi.weixin.qq.com/cgi-bin/wedoc/smartsheet/get_records'
     
+    # 访问token（用于限制外部访问）
+    ACCESS_TOKEN = os.getenv('token', '')
+    
     @classmethod
     def validate(cls):
         """验证必要配置是否存在"""

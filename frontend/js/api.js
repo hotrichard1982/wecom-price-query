@@ -1,12 +1,23 @@
 class APIClient {
     constructor() {
         this.baseURL = '/api';
+        
+        // 从URL参数中获取访问token
+        const urlParams = new URLSearchParams(window.location.search);
+        this.token = urlParams.get('token');
+        
         console.log('[API] baseURL:', this.baseURL);
-        console.log('[API] window.location:', window.location.href);
+        console.log('[API] Token:', this.token ? '已配置' : '未配置');
     }
 
     async query(data) {
-        const url = `${this.baseURL}/query`;
+        let url = `${this.baseURL}/query`;
+        
+        // 如果有token，添加到URL参数中
+        if (this.token) {
+            url += `?token=${this.token}`;
+        }
+        
         console.log('[API] 请求URL:', url);
         console.log('[API] 请求数据:', JSON.stringify(data, null, 2));
 
@@ -20,7 +31,6 @@ class APIClient {
             });
 
             console.log('[API] 响应状态:', response.status, response.statusText);
-            console.log('[API] 响应头:', Object.fromEntries(response.headers.entries()));
 
             const text = await response.text();
             console.log('[API] 响应原始数据:', text);
@@ -30,7 +40,6 @@ class APIClient {
             }
 
             const result = JSON.parse(text);
-            console.log('[API] 解析后的JSON:', JSON.stringify(result, null, 2));
             return result;
         } catch (error) {
             console.error('[API] 请求错误:', error);

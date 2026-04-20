@@ -1,5 +1,6 @@
 import os
-from flask import Flask, jsonify, send_from_directory
+import hashlib
+from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
 from .routes.query import query_bp
 from .utils.config import config
@@ -18,6 +19,37 @@ if cors_origins:
     CORS(app, origins=origins, supports_credentials=True)
 else:
     CORS(app)
+
+# 生成token（如果.env中没有配置，则自动生成一个）
+if not config.ACCESS_TOKEN:
+    config.ACCESS_TOKEN = hashlib.sha256(os.urandom(32)).hexdigest()[:16]
+    print(f"🔑 自动生成访问Token: {config.ACCESS_TOKEN}")
+    print(f"💡 请将此Token添加到.env文件的token字段中")
+
+@app.before_request
+def validate_access_token():
+    """验证访问token，防止未授权访问"""
+    # 静态文件（CSS、JS、图片等）不需要验证
+    if request.path != '/' and not request.path.startswith('/api/'):
+        return None
+    
+    # 获取请求中的token（支持URL参数和Header两种方式）
+    token = request.args.get('token') or request.headers.get('X-Access-Token')
+    
+    # 如果配置了token，则必须验证
+    if config.ACCESS_TOKEN and token != config.ACCESS_TOKEN:
+        if request.path.startswith('/api/'):
+            return jsonify({
+                'success': False,
+                'message': '访问被拒绝：无效的访问Token'
+            }), 403
+        else:
+            return send_from_directory(
+                os.path.join(BASE_DIR, 'frontend'),
+                '403.html'
+            ), 403
+    
+    return None
 
 app.register_blueprint(query_bp, url_prefix='/api')
 
@@ -40,4 +72,6 @@ def internal_error(error):
 
 if __name__ == '__main__':
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    print(f"\n🔑 访问Token: {config.ACCESS_TOKEN}")
+    print(f"📝 完整访问地址: http://127.0.0.1:5000/?token={config.ACCESS_TOKEN}\n")
     app.run(host='0.0.0.0', port=5000, debug=debug_mode)
