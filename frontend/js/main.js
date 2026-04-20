@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const resultItem = document.createElement('div');
             resultItem.className = 'result-item';
 
-            // 构建结果内容
+            // 构建参数表格HTML（展开后显示）
             let infoHTML = '<table class="product-table">';
             
             // 遍历所有字段，排除隐藏字段
@@ -181,16 +181,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>`;
             }
             
-            // 添加产品信息
+            // 添加产品信息（默认显示）
             cardHTML += `
                 <h3>${escapeHtml(item['产品名'] || 'N/A')}</h3>
                 <div class="price">
                     报价: ¥${escapeHtml(item['报价'] || 0)}
                 </div>
-                <div class="info">
-                    ${infoHTML}
-                </div>
             `;
+
+            // 添加详细参数（默认隐藏）
+            cardHTML += `<div class="info hidden">
+                ${infoHTML}
+            </div>`;
+
+            // 添加展开/收起按钮
+            cardHTML += `<button class="toggle-btn" onclick="toggleProductInfo(this)">
+                <span class="toggle-text">展开更多</span>
+                <span class="toggle-icon">▼</span>
+            </button>`;
             
             resultItem.innerHTML = cardHTML;
 
@@ -199,3 +207,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// 展开/收起产品详细信息
+function toggleProductInfo(btn) {
+    const resultItem = btn.closest('.result-item');
+    const info = resultItem.querySelector('.info');
+    const toggleText = btn.querySelector('.toggle-text');
+    const toggleIcon = btn.querySelector('.toggle-icon');
+    
+    if (info.classList.contains('hidden')) {
+        // 展开
+        info.classList.remove('hidden');
+        toggleText.textContent = '收起';
+        toggleIcon.style.transform = 'rotate(180deg)';
+    } else {
+        // 收起
+        info.classList.add('hidden');
+        toggleText.textContent = '展开更多';
+        toggleIcon.style.transform = 'rotate(0deg)';
+    }
+}
