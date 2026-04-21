@@ -174,10 +174,18 @@ document.addEventListener('DOMContentLoaded', function() {
             // 构建卡片内容
             let cardHTML = '';
             
-            // 添加产品图片
+            // 添加产品图片（可点击全屏查看）
             if (item['产品图片']) {
-                cardHTML += `<div class="product-image">
+                cardHTML += `<div class="product-image" onclick="openImageViewer('${escapeHtml(item['产品图片'])}', '${escapeHtml(item['产品名'] || '产品图片')}')" style="cursor:pointer;">
                     <img src="${escapeHtml(item['产品图片'])}" alt="${escapeHtml(item['产品名'] || '产品图片')}">
+                    <div class="image-overlay">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="1.5">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            <line x1="11" y1="8" x2="11" y2="14"/>
+                            <line x1="8" y1="11" x2="14" y2="11"/>
+                        </svg>
+                    </div>
                 </div>`;
             }
             
@@ -227,3 +235,31 @@ function toggleProductInfo(btn) {
         toggleIcon.style.transform = 'rotate(0deg)';
     }
 }
+
+// 打开图片全屏查看器
+function openImageViewer(imageUrl, caption) {
+    const viewer = document.getElementById('image-viewer');
+    const viewerImage = document.getElementById('viewer-image');
+    const viewerCaption = document.getElementById('viewer-caption');
+    
+    viewerImage.src = imageUrl;
+    viewerImage.alt = caption;
+    viewerCaption.textContent = caption;
+    
+    viewer.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // 禁止页面滚动
+}
+
+// 关闭图片全屏查看器
+function closeImageViewer() {
+    const viewer = document.getElementById('image-viewer');
+    viewer.classList.add('hidden');
+    document.body.style.overflow = ''; // 恢复页面滚动
+}
+
+// ESC键关闭图片查看器
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeImageViewer();
+    }
+});

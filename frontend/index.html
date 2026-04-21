@@ -61,8 +61,24 @@
         <div id="result" class="result hidden">
             <div class="result-header">
                 <h2>查询结果</h2>
+                <span id="result-count" class="result-count"></span>
             </div>
             <div id="result-list" class="result-list"></div>
+        </div>
+
+        <!-- 图片全屏查看器 -->
+        <div id="image-viewer" class="image-viewer hidden">
+            <div class="viewer-overlay" onclick="closeImageViewer()"></div>
+            <div class="viewer-content">
+                <button class="viewer-close" onclick="closeImageViewer()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+                <img id="viewer-image" src="" alt="产品大图">
+                <p id="viewer-caption" class="viewer-caption"></p>
+            </div>
         </div>
     </div>
 

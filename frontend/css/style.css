@@ -340,6 +340,131 @@ body {
     font-size: 12px;
 }
 
+/* 产品图片悬停覆盖层 */
+.result-item .product-image {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: var(--border-radius);
+}
+
+.image-overlay svg {
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.result-item .product-image:hover .image-overlay {
+    opacity: 1;
+}
+
+.result-item .product-image:hover .image-overlay svg {
+    transform: scale(1);
+}
+
+/* 图片全屏查看器 */
+.image-viewer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+}
+
+.image-viewer .viewer-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    cursor: pointer;
+}
+
+.image-viewer .viewer-content {
+    position: relative;
+    z-index: 10000;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.image-viewer .viewer-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+    z-index: 10001;
+}
+
+.image-viewer .viewer-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.image-viewer .viewer-close svg {
+    width: 24px;
+    height: 24px;
+}
+
+.image-viewer #viewer-image {
+    max-width: 95vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: viewerZoomIn 0.3s ease;
+}
+
+.image-viewer .viewer-caption {
+    margin-top: 16px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    text-align: center;
+    max-width: 95vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@keyframes viewerZoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
 /* 产品参数表格 */
 .product-table {
     width: 100%;
