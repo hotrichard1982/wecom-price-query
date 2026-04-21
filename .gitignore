@@ -7,23 +7,10 @@ __pycache__/
 env/
 venv/
 ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
 
-# 配置文件
+# 敏感配置
 .env
 
 # IDE
@@ -32,17 +19,9 @@ wheels/
 *.swp
 *.swo
 
-# Trae规则目录
+# 编辑器规则
 .trae/
 
-# 项目文档（保留README.md）
-商品价格查询系统PRD.md
-开发必备参数.md
-代码审查报告.md
-
-# macOS
+# 操作系统
 .DS_Store
-
-# Windows
 Thumbs.db
-desktop.ini
