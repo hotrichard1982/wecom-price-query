@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据源管理 - 商品价格查询系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:{50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8'}}}}}</script>
+    <style>.fade-in{animation:fadeIn 0.4s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.modal-bg{animation:modalBgIn 0.2s ease}@keyframes modalBgIn{from{opacity:0}to{opacity:1}}</style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div>
+            <span class="font-semibold text-slate-800">价格查询系统</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex gap-1">
+                <a href="/admin/dashboard.html" class="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-800 rounded-lg transition">控制台</a>
+                <a href="/admin/datasource.html" class="px-3 py-1.5 text-sm bg-primary-50 text-primary-600 rounded-lg font-medium">数据源</a>
+                <a href="/admin/settings.html" class="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-800 rounded-lg transition">设置</a>
+            </div>
+            <span id="nav-user" class="text-sm text-slate-500"></span>
+            <button onclick="logout()" class="text-sm text-red-500 hover:text-red-600 transition">退出</button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-6 py-8 fade-in">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-slate-800">数据源管理</h2>
+            <button onclick="openAddModal()" class="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                添加数据源
+            </button>
+        </div>
+
+        <div id="ds-list" class="space-y-3"></div>
+        <div id="ds-empty" class="hidden text-center py-16 text-slate-400">
+            <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+            <p class="text-lg">暂无数据源</p>
+            <p class="text-sm mt-1">点击右上角「添加数据源」开始配置</p>
+        </div>
+    </main>
+
+    <!-- 添加/编辑数据源模态框 -->
+    <div id="ds-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-bg fixed inset-0 bg-black/40" onclick="closeModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 fade-in">
+            <h3 class="text-lg font-bold text-slate-800 mb-5" id="modal-title">添加数据源</h3>
+            <input type="hidden" id="edit-id">
+            <div class="space-y-4">
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">数据源名称</label><input id="f-name" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="如：发电机组报价"></div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">数据库类型</label>
+                        <select id="f-db-type" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm">
+                            <option value="mysql">MySQL</option>
+                            <option value="postgresql">PostgreSQL</option>
+                        </select>
+                    </div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">端口</label><input id="f-port" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm" value="3306"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">主机</label><input id="f-host" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="127.0.0.1"></div>
+                </div>
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">数据库名</label><input id="f-db" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="数据库名称"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">用户名</label><input id="f-user" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="root"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">密码</label><input type="password" id="f-pwd" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="数据库密码"></div>
+                </div>
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">表名</label><input id="f-table" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="数据库中的表名"></div>
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">备注</label><input id="f-desc" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="选填"></div>
+            </div>
+            <div id="modal-error" class="text-red-500 text-sm mt-3 hidden"></div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="testConnection()" class="flex-1 border border-slate-300 text-slate-600 hover:bg-slate-50 py-2 rounded-xl text-sm font-medium transition">测试连接</button>
+                <button onclick="closeModal()" class="flex-1 border border-slate-300 text-slate-600 hover:bg-slate-50 py-2 rounded-xl text-sm font-medium transition">取消</button>
+                <button id="btn-save" onclick="saveDatasource()" class="flex-[2] bg-primary-500 hover:bg-primary-600 text-white py-2 rounded-xl text-sm font-medium transition shadow-sm">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../admin/js/api.js"></script>
+    <script src="../admin/js/app.js"></script>
+    <script>
+        let editingId = null;
+
+        async function loadList() {
+            const auth = await checkLogin();
+            if (!auth) return;
+            document.getElementById('nav-user').textContent = auth.username || '';
+            const result = await adminAPI.getDatasources();
+            const list = document.getElementById('ds-list');
+            const empty = document.getElementById('ds-empty');
+            list.innerHTML = '';
+            if (!result?.success || !result.data?.length) {
+                list.classList.add('hidden');
+                empty.classList.remove('hidden');
+                return;
+            }
+            list.classList.remove('hidden');
+            empty.classList.add('hidden');
+            result.data.forEach(ds => {
+                const el = document.createElement('div');
+                el.className = 'bg-white rounded-xl border border-slate-200 p-5 flex items-center justify-between hover:shadow-sm transition fade-in';
+                el.innerHTML = `
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-medium text-slate-800">${ds.name}</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full ${ds.db_type === 'mysql' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}">${ds.db_type}</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full ${ds.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'}">${ds.is_active ? '启用' : '停用'}</span>
+                        </div>
+                        <p class="text-sm text-slate-500 truncate">${ds.host}:${ds.port} / ${ds.database_name} . ${ds.table_name}</p>
+                        ${ds.description ? `<p class="text-xs text-slate-400 mt-1">${ds.description}</p>` : ''}
+                    </div>
+                    <div class="flex items-center gap-2 ml-4">
+                        <button class="p-2 text-slate-400 hover:text-slate-600 transition" onclick="editDatasource(${ds.id})" title="编辑"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+                        <button class="p-2 text-red-400 hover:text-red-500 transition" onclick="deleteDatasource(${ds.id})" title="删除"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                    </div>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modal-title').textContent = '添加数据源';
+            document.getElementById('edit-id').value = '';
+            ['f-name','f-host','f-port','f-db','f-user','f-pwd','f-table','f-desc'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('f-port').value = '3306';
+            document.getElementById('f-db-type').value = 'mysql';
+            document.getElementById('modal-error').classList.add('hidden');
+            document.getElementById('ds-modal').classList.remove('hidden');
+        }
+
+        async function editDatasource(id) {
+            editingId = id;
+            document.getElementById('modal-title').textContent = '编辑数据源';
+            document.getElementById('edit-id').value = id;
+            document.getElementById('modal-error').classList.add('hidden');
+            const result = await adminAPI.getDatasources();
+            const ds = result.data.find(d => d.id === id);
+            if (!ds) return;
+            document.getElementById('f-name').value = ds.name || '';
+            document.getElementById('f-db-type').value = ds.db_type || 'mysql';
+            document.getElementById('f-host').value = ds.host || '';
+            document.getElementById('f-port').value = ds.port || '3306';
+            document.getElementById('f-db').value = ds.database_name || '';
+            document.getElementById('f-user').value = ds.db_username || '';
+            document.getElementById('f-pwd').value = '';
+            document.getElementById('f-table').value = ds.table_name || '';
+            document.getElementById('f-desc').value = ds.description || '';
+            document.getElementById('ds-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('ds-modal').classList.add('hidden');
+        }
+
+        function getFormData() {
+            return {
+                name: document.getElementById('f-name').value.trim(),
+                db_type: document.getElementById('f-db-type').value,
+                host: document.getElementById('f-host').value.trim(),
+                port: document.getElementById('f-port').value.trim(),
+                database_name: document.getElementById('f-db').value.trim(),
+                db_username: document.getElementById('f-user').value.trim(),
+                db_password: document.getElementById('f-pwd').value,
+                table_name: document.getElementById('f-table').value.trim(),
+                description: document.getElementById('f-desc').value.trim()
+            };
+        }
+
+        async function testConnection() {
+            const data = getFormData();
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '测试中...';
+            const result = await adminAPI.testConnection(data);
+            btn.disabled = false;
+            btn.textContent = '测试连接';
+            if (result?.success) {
+                showToast('✅ 连接成功', 'success');
+            } else {
+                showToast('❌ ' + (result?.message || '连接失败'), 'error');
+            }
+        }
+
+        async function saveDatasource() {
+            const data = getFormData();
+            const errorEl = document.getElementById('modal-error');
+            errorEl.classList.add('hidden');
+            if (!data.name || !data.host || !data.database_name || !data.db_username || !data.table_name) {
+                errorEl.textContent = '请填写必填字段';
+                errorEl.classList.remove('hidden'); return;
+            }
+            if (!data.db_password && !editingId) {
+                errorEl.textContent = '请输入数据库密码';
+                errorEl.classList.remove('hidden'); return;
+            }
+            const btn = document.getElementById('btn-save');
+            btn.disabled = true;
+            btn.textContent = '保存中...';
+            let result;
+            if (editingId) {
+                result = await adminAPI.updateDatasource(editingId, data);
+            } else {
+                result = await adminAPI.addDatasource(data);
+            }
+            btn.disabled = false;
+            btn.textContent = '保存';
+            if (result?.success) {
+                showToast('✅ ' + result.message, 'success');
+                closeModal();
+                loadList();
+            } else {
+                errorEl.textContent = result?.message || '操作失败';
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        async function deleteDatasource(id) {
+            if (!confirm('确定要删除这个数据源吗？')) return;
+            const result = await adminAPI.deleteDatasource(id);
+            if (result?.success) {
+                showToast('✅ 已删除', 'success');
+                loadList();
+            } else {
+                showToast('❌ ' + (result?.message || '删除失败'), 'error');
+            }
+        }
+
+        loadList();
+    </script>
+</body>
+</html>

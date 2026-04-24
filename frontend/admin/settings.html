@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统设置 - 商品价格查询系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:{50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8'}}}}}</script>
+    <style>.fade-in{animation:fadeIn 0.4s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div>
+            <span class="font-semibold text-slate-800">价格查询系统</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex gap-1">
+                <a href="/admin/dashboard.html" class="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-800 rounded-lg transition">控制台</a>
+                <a href="/admin/datasource.html" class="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-800 rounded-lg transition">数据源</a>
+                <a href="/admin/settings.html" class="px-3 py-1.5 text-sm bg-primary-50 text-primary-600 rounded-lg font-medium">设置</a>
+            </div>
+            <span id="nav-user" class="text-sm text-slate-500"></span>
+            <button onclick="logout()" class="text-sm text-red-500 hover:text-red-600 transition">退出</button>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto px-6 py-8 fade-in">
+        <h2 class="text-xl font-bold text-slate-800 mb-6">系统设置</h2>
+        
+        <div class="space-y-6">
+            <!-- 修改密码 -->
+            <div class="bg-white rounded-xl border border-slate-200 p-6">
+                <h3 class="font-medium text-slate-800 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    修改密码
+                </h3>
+                <div class="space-y-3 max-w-sm">
+                    <input type="password" id="old-pwd" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="当前密码">
+                    <input type="password" id="new-pwd" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="新密码（至少6位）">
+                    <input type="password" id="confirm-pwd" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="确认新密码">
+                    <div id="pwd-error" class="text-red-500 text-sm hidden"></div>
+                    <button onclick="changePassword()" class="bg-primary-500 hover:bg-primary-600 text-white px-5 py-2 rounded-xl text-sm font-medium transition shadow-sm">保存密码</button>
+                </div>
+            </div>
+
+            <!-- 访问Token -->
+            <div class="bg-white rounded-xl border border-slate-200 p-6">
+                <h3 class="font-medium text-slate-800 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                    访问Token
+                </h3>
+                <p class="text-xs text-slate-500 mb-3">前端访问系统时需要携带此Token，请妥善保管</p>
+                <div class="flex gap-3 max-w-lg">
+                    <input type="text" id="access-token" class="flex-1 px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm font-mono" readonly>
+                    <button onclick="toggleTokenEdit()" class="px-4 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-medium transition">修改</button>
+                </div>
+                <div id="token-edit-area" class="hidden mt-3 max-w-lg">
+                    <div class="flex gap-3">
+                        <input type="text" id="new-token" class="flex-1 px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm font-mono" placeholder="输入新Token（至少6位）">
+                        <button onclick="saveToken()" class="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">保存</button>
+                        <button onclick="cancelTokenEdit()" class="px-4 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-medium transition">取消</button>
+                    </div>
+                    <div id="token-error" class="text-red-500 text-sm mt-2 hidden"></div>
+                </div>
+            </div>
+
+            <!-- 系统信息 -->
+            <div class="bg-white rounded-xl border border-slate-200 p-6">
+                <h3 class="font-medium text-slate-800 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    系统信息
+                </h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div><span class="text-slate-500">版本</span><p class="font-medium text-slate-800" id="sys-version">-</p></div>
+                    <div><span class="text-slate-500">后端</span><p class="font-medium text-slate-800">Python + Flask</p></div>
+                    <div><span class="text-slate-500">前端</span><p class="font-medium text-slate-800">HTML5 + CSS3 + JS</p></div>
+                    <div><span class="text-slate-500">数据库</span><p class="font-medium text-slate-800">SQLite + MySQL/PGSQL</p></div>
+                    <div><span class="text-slate-500">管理员</span><p class="font-medium text-slate-800" id="sys-user">-</p></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../admin/js/api.js"></script>
+    <script src="../admin/js/app.js"></script>
+    <script>
+        let originalToken = '';
+
+        async function loadSettings() {
+            const auth = await checkLogin();
+            if (!auth) return;
+            document.getElementById('nav-user').textContent = auth.username || '';
+            const result = await adminAPI.getSettings();
+            if (result?.success) {
+                const data = result.data;
+                originalToken = data['app.access_token'] || '';
+                document.getElementById('access-token').value = originalToken ? originalToken.substring(0, 8) + '****' : '-';
+                document.getElementById('sys-version').textContent = data['app.version'] || '-';
+                document.getElementById('sys-user').textContent = data.username || '-';
+            }
+        }
+
+        function toggleTokenEdit() {
+            document.getElementById('token-edit-area').classList.toggle('hidden');
+            document.getElementById('new-token').value = '';
+            document.getElementById('token-error').classList.add('hidden');
+            if (!document.getElementById('token-edit-area').classList.contains('hidden')) {
+                document.getElementById('new-token').focus();
+            }
+        }
+
+        function cancelTokenEdit() {
+            document.getElementById('token-edit-area').classList.add('hidden');
+            document.getElementById('token-error').classList.add('hidden');
+        }
+
+        async function saveToken() {
+            const token = document.getElementById('new-token').value.trim();
+            const errorEl = document.getElementById('token-error');
+            errorEl.classList.add('hidden');
+            if (!token || token.length < 6) {
+                errorEl.textContent = 'Token至少6个字符';
+                errorEl.classList.remove('hidden'); return;
+            }
+            const result = await adminAPI.updateToken(token);
+            if (result?.success) {
+                showToast('✅ Token更新成功', 'success');
+                cancelTokenEdit();
+                loadSettings();
+            } else {
+                errorEl.textContent = result?.message || '更新失败';
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        async function changePassword() {
+            const oldPwd = document.getElementById('old-pwd').value;
+            const newPwd = document.getElementById('new-pwd').value;
+            const confirm = document.getElementById('confirm-pwd').value;
+            const errorEl = document.getElementById('pwd-error');
+            errorEl.classList.add('hidden');
+            if (!oldPwd || !newPwd) {
+                errorEl.textContent = '请填写所有密码字段';
+                errorEl.classList.remove('hidden'); return;
+            }
+            if (newPwd.length < 6) {
+                errorEl.textContent = '新密码至少6个字符';
+                errorEl.classList.remove('hidden'); return;
+            }
+            if (newPwd !== confirm) {
+                errorEl.textContent = '两次密码输入不一致';
+                errorEl.classList.remove('hidden'); return;
+            }
+            const result = await adminAPI.changePassword(oldPwd, newPwd);
+            if (result?.success) {
+                showToast('✅ 密码修改成功', 'success');
+                document.getElementById('old-pwd').value = '';
+                document.getElementById('new-pwd').value = '';
+                document.getElementById('confirm-pwd').value = '';
+            } else {
+                errorEl.textContent = result?.message || '修改失败';
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        loadSettings();
+    </script>
+</body>
+</html>
