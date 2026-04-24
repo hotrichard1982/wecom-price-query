@@ -31,8 +31,10 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         loading.classList.add('hidden');
         app.classList.remove('hidden');
-        // 加载下拉菜单数据
-        loadAllProducts();
+        // 初始化API客户端并加载数据
+        apiClient.init().then(() => {
+            loadAllProducts();
+        });
     }, 1000);
 
     // 加载所有产品数据
