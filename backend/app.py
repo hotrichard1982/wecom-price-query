@@ -1,18 +1,45 @@
 import os
 import hashlib
+from datetime import timedelta
 from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
+from .models.db import db
 from .routes.query import query_bp
+from .routes.admin import admin_bp
 from .utils.config import config
 
-# 获取项目根目录
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-app = Flask(__name__, 
+app = Flask(__name__,
             static_folder=os.path.join(BASE_DIR, 'frontend'),
-            static_url_path='')
+            static_url_path='',
+            template_folder=os.path.join(BASE_DIR, 'frontend'))
 
-# 配置CORS，支持环境变量配置允许的来源
+app.config['SECRET_KEY'] = hashlib.sha256(os.urandom(32)).hexdigest()
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=4)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'data', 'data.db').replace('\\', '/')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+os.makedirs(os.path.join(BASE_DIR, 'data'), exist_ok=True)
+db.init_app(app)
+
+with app.app_context():
+    from .models.db import User, SystemSetting
+    db.create_all()
+    admin_exists = User.query.filter_by(is_admin=True).first()
+    app.config['NEED_INIT'] = not admin_exists
+    setting = SystemSetting.query.filter_by(key='app.access_token').first()
+    if setting:
+        app.config['ACCESS_TOKEN'] = setting.value
+    else:
+        default_token = os.getenv('token', '') or hashlib.sha256(os.urandom(32)).hexdigest()[:16]
+        db.session.add(SystemSetting(key='app.access_token', value=default_token, description='访问令牌'))
+        db.session.add(SystemSetting(key='app.version', value='v260425', description='系统版本'))
+        db.session.commit()
+        app.config['ACCESS_TOKEN'] = default_token
+
 cors_origins = os.getenv('CORS_ORIGINS')
 if cors_origins:
     origins = [origin.strip() for origin in cors_origins.split(',') if origin.strip()]
@@ -20,43 +47,36 @@ if cors_origins:
 else:
     CORS(app)
 
-# 生成token（如果.env中没有配置，则自动生成一个）
-if not config.ACCESS_TOKEN:
-    config.ACCESS_TOKEN = hashlib.sha256(os.urandom(32)).hexdigest()[:16]
-    print(f"🔑 自动生成访问Token: {config.ACCESS_TOKEN}")
-    print(f"💡 请将此Token添加到.env文件的token字段中")
-
 @app.before_request
 def validate_access_token():
-    """验证访问token，防止未授权访问"""
-    # 静态文件（CSS、JS、图片等）不需要验证
+    if request.path.startswith('/admin/') or request.path.startswith('/api/admin/') or request.path == '/init':
+        return None
     if request.path != '/' and not request.path.startswith('/api/'):
         return None
-    
-    # 获取请求中的token（支持URL参数和Header两种方式）
     token = request.args.get('token') or request.headers.get('X-Access-Token')
-    
-    # 如果配置了token，则必须验证
-    if config.ACCESS_TOKEN and token != config.ACCESS_TOKEN:
+    access_token = app.config.get('ACCESS_TOKEN', '')
+    if access_token and token != access_token:
         if request.path.startswith('/api/'):
-            return jsonify({
-                'success': False,
-                'message': '访问被拒绝：无效的访问Token'
-            }), 403
+            return jsonify({'success': False, 'message': '访问被拒绝：无效的访问Token'}), 403
         else:
-            return send_from_directory(
-                os.path.join(BASE_DIR, 'frontend'),
-                '403.html'
-            ), 403
-    
+            return send_from_directory(os.path.join(BASE_DIR, 'frontend'), '403.html'), 403
     return None
 
 app.register_blueprint(query_bp, url_prefix='/api')
+app.register_blueprint(admin_bp, url_prefix='/api/admin')
 
 @app.route('/')
 def index():
-    """返回前端首页"""
     return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/admin/')
+@app.route('/admin/<path:page>')
+def admin_page(page='login.html'):
+    return send_from_directory(os.path.join(BASE_DIR, 'frontend', 'admin'), page if page else 'login.html')
+
+@app.route('/init')
+def init_page():
+    return send_from_directory(os.path.join(BASE_DIR, 'frontend', 'admin'), 'login.html')
 
 @app.errorhandler(404)
 def not_found(error):
@@ -72,6 +92,15 @@ def internal_error(error):
 
 if __name__ == '__main__':
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
-    print(f"\n🔑 访问Token: {config.ACCESS_TOKEN}")
-    print(f"📝 完整访问地址: http://127.0.0.1:5000/?token={config.ACCESS_TOKEN}\n")
-    app.run(host='0.0.0.0', port=5000, debug=debug_mode)
+    port = int(os.getenv('FLASK_RUN_PORT', 5000))
+    print(f"\n{'='*50}")
+    print(f"🚀 商品价格查询系统 v260425")
+    print(f"{'='*50}")
+    if app.config.get('NEED_INIT'):
+        print(f"📝 首次运行！请访问 /init 完成初始化")
+        print(f"📱 地址: http://127.0.0.1:{port}/init")
+    else:
+        print(f"📱 地址: http://127.0.0.1:{port}")
+    print(f"🔑 访问Token: {app.config.get('ACCESS_TOKEN', '')}")
+    print()
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
